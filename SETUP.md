@@ -26,9 +26,35 @@ create table public.test_results (
 ) TABLESPACE pg_default;
 ```
 
-2. Make sure you have a `students` table with at least an `admission_no` column.
+2. Create the `students` table with the required fields:
 
-3. Your data structure should match this format (based on your CSV):
+```sql
+create table public.students (
+  admission_no character varying(20) not null,
+  student_name character varying(100) not null,
+  student_dob date not null,
+  student_gender character varying(10) not null,
+  class character varying(10) not null,
+  section_name character varying(5) not null,
+  roll_no integer not null,
+  father_name character varying(100) not null,
+  mother_name character varying(100) not null,
+  constraint students_pkey primary key (admission_no)
+) TABLESPACE pg_default;
+```
+
+3. Insert sample student data:
+
+```sql
+-- Sample students data
+INSERT INTO students (admission_no, student_name, student_dob, student_gender, class, section_name, roll_no, father_name, mother_name) VALUES
+('S24/29', 'John Doe', '2009-05-15', 'Male', 'X', 'A', 1, 'John Sr.', 'Jane Doe'),
+('P22/51', 'Jane Smith', '2010-03-22', 'Female', 'IX', 'B', 2, 'Robert Smith', 'Mary Smith'),
+('P23/75', 'Mike Johnson', '2011-08-10', 'Male', 'VIII', 'A', 3, 'David Johnson', 'Lisa Johnson'),
+('P21/37A', 'Sarah Wilson', '2008-12-05', 'Female', 'XI', 'C', 4, 'Thomas Wilson', 'Emma Wilson');
+```
+
+4. Your data structure should match this format (based on your CSV):
 
 ```sql
 -- Sample data structure (your actual data format):
@@ -68,6 +94,7 @@ npm run dev
 ## Features
 
 - **Student Result Lookup**: Students can enter their admission number to view their test results
+- **Student Finder**: Interactive lookup system to find admission numbers by class, section, and name verification
 - **Comprehensive Results Display**: Shows marks, percentage, grade, test date, category, and attendance
 - **Grade Calculation**: Automatic grade calculation based on percentage (A+, A, B+, B, C+, C, F)
 - **Overall Statistics**: Displays total marks, overall percentage, and overall grade
@@ -77,10 +104,20 @@ npm run dev
 
 ## Usage
 
+### Direct Result Lookup
 1. Enter a valid admission number (e.g., S24/29, S25/56, P22/51, P21/37A)
 2. Click "Search Results" or press Enter
 3. View the detailed results table with all test information
 4. Check overall statistics at the bottom of the results
+
+### Student Finder (Find Admission Number)
+1. Click "Find Your Admission Number" from the main page
+2. Select your class (NUR, LKG, UKG, I-XII)
+3. Select your section (A, B, C, D, E)
+4. Choose your name from the list of students (admission numbers are hidden for security)
+5. Verify your date of birth for security verification
+6. Get your admission number revealed only after successful verification
+7. Proceed to view results with your admission number
 
 ## Sample Admission Numbers (from your data):
 - **S24/29** - Computer Science student with Class Test results

@@ -36,15 +36,36 @@ export type Database = {
       students: {
         Row: {
           admission_no: string
-          // Add other student fields as needed
+          student_name: string
+          student_dob: string
+          student_gender: string
+          class: string
+          section_name: string
+          roll_no: number
+          father_name: string
+          mother_name: string
         }
         Insert: {
           admission_no: string
-          // Add other student fields as needed
+          student_name: string
+          student_dob: string
+          student_gender: string
+          class: string
+          section_name: string
+          roll_no: number
+          father_name: string
+          mother_name: string
         }
         Update: {
           admission_no?: string
-          // Add other student fields as needed
+          student_name?: string
+          student_dob?: string
+          student_gender?: string
+          class?: string
+          section_name?: string
+          roll_no?: number
+          father_name?: string
+          mother_name?: string
         }
       }
     }
@@ -61,3 +82,4 @@ export type Database = {
 }
 
 export type TestResult = Database['public']['Tables']['test_results']['Row']
+export type Student = Database['public']['Tables']['students']['Row']

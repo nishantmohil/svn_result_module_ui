@@ -2,6 +2,7 @@
 	import { supabase } from '$lib/supabase'
 	import type { TestResult } from '$lib/types/database'
 	import { onMount } from 'svelte'
+	import { page } from '$app/stores'
 
 	let admissionNo = $state('')
 	let results: TestResult[] = $state([])
@@ -11,6 +12,18 @@
 	let searched = $state(false)
 	let selectedSubject = $state('all')
 	let availableSubjects: string[] = $state([])
+
+	// Check for admission parameter in URL and auto-search
+	onMount(() => {
+		const urlAdmission = $page.url.searchParams.get('admission')
+		if (urlAdmission) {
+			admissionNo = urlAdmission
+			// Small delay to show the auto-population visually
+			setTimeout(() => {
+				fetchResults()
+			}, 100)
+		}
+	})
 
 
 	async function fetchResults() {
@@ -147,6 +160,19 @@
 						</button>
 					{/if}
 				</div>
+			</div>
+			
+			<!-- Find Admission Number Link -->
+			<div class="text-center mt-4">
+				<a
+					href="/lookup"
+					class="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium text-sm transition duration-200"
+				>
+					<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+					</svg>
+					Don't know your admission number? Find it here
+				</a>
 			</div>
 		</div>
 

@@ -79,12 +79,14 @@ INSERT INTO test_results (admission_no, subject_name, marks_obtained, max_marks,
 - Only marks, percentage, and attendance status are shown
 
 ### Simple & Clean Interface
-- **Easy-to-Use Filters**: Simple dropdown menus for subject/exam type and date selection
+- **Easy-to-Use Filters**: Clearly designed interactive dropdown menus with "Select Subject" and "Select Test Date" labels, visual indicators and colored backgrounds, stacked vertically for consistent layout across all screen sizes
 - **Contextual Date Filtering**: Date filter shows only dates available for the selected test type/subject
 - **Smart Date Updates**: When changing test types, date options automatically update to show relevant dates
 - **Mobile-Optimized Cards**: Card-based layout that works perfectly on mobile devices
+- **Responsive Navigation**: Mobile-friendly navigation with hamburger menu and responsive logo sizing
+- **Personalized Experience**: Shows student's name in the results header (e.g., "John's Test Results") instead of generic subject-based headers
 - **Subject Grouping**: Results are grouped by subject to avoid repetitive subject names and improve readability
-- **Colorful Design**: Vibrant colors and gradients for better visual appeal while maintaining professionalism
+- **Beautiful Design Theme**: Consistent use of colored backgrounds, gradient effects, and thick borders throughout all components for a cohesive and visually appealing interface
 - **Smart Attendance Display**: Only shows "Absent" status when student was absent, hides "Present" status for cleaner look
 - **Score-Focused Design**: Emphasizes actual marks obtained over percentage for better clarity
 - **Neutral Color Scheme**: Uses gray for maximum marks to create better visual balance

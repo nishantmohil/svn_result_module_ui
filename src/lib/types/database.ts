@@ -89,5 +89,6 @@ export type Student = Database['public']['Tables']['students']['Row']
 export type TestResultWithStudent = TestResult & {
   students?: {
     class: string
+    student_name: string
   }
 }

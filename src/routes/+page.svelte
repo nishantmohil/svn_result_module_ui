@@ -5,6 +5,7 @@
 	import { page } from '$app/stores'
 
 	let admissionNo = $state('')
+	let studentName = $state('')
 	let results: TestResultWithStudent[] = $state([])
 	let filteredResults: TestResultWithStudent[] = $state([])
 	let loading = $state(false)
@@ -39,12 +40,12 @@
 		searched = true
 
 		try {
-			// Join with students table to get class information
+			// Join with students table to get class information and student name
 			const { data, error: supabaseError } = await supabase
 				.from('test_results')
 				.select(`
 					*,
-					students!inner(class)
+					students!inner(class, student_name)
 				`)
 				.eq('admission_no', admissionNo.trim())
 				.order('test_date', { ascending: false })
@@ -56,7 +57,10 @@
 			results = data || []
 			if (results.length === 0) {
 				error = 'No results found for this admission number'
+				studentName = ''
 			} else {
+				// Get student name from the first result
+				studentName = results[0]?.students?.student_name || 'Student'
 				// Get class level from the joined student data
 				const classLevel = results[0]?.students?.class || 'X'
 				const isJuniorClass = ['NUR', 'LKG', 'UKG', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'].includes(classLevel)
@@ -85,6 +89,7 @@
 			filteredResults = []
 			availableSubjects = []
 			availableDates = []
+			studentName = ''
 		} finally {
 			loading = false
 		}
@@ -211,15 +216,18 @@
 
 <div class="py-8 px-4">
 	<div class="max-w-4xl mx-auto">
-		<!-- Page Header -->
-		<div class="mb-8">
-			<h1 class="text-3xl font-bold text-gray-900 mb-2">View Test Results</h1>
-			<p class="text-gray-600">Enter your admission number to access your academic performance</p>
-		</div>
+		<!-- Page Header - Only show when no results -->
+		{#if !searched || results.length === 0}
+			<div class="mb-8">
+				<h1 class="text-3xl font-bold text-gray-900 mb-2">View Test Results</h1>
+				<p class="text-gray-600">Enter your admission number to access your academic performance</p>
+			</div>
+		{/if}
+
 
 		<!-- Search Form - Only show if no results -->
 		{#if !searched || results.length === 0}
-			<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-8 mb-8">
+			<div class="bg-white rounded-xl shadow-sm border-2 border-blue-200 p-8 mb-8">
 			<div class="space-y-6">
 				<div>
 					<label for="admission-no" class="block text-sm font-semibold text-gray-900 mb-3">
@@ -232,7 +240,7 @@
 							bind:value={admissionNo}
 							onkeypress={handleKeyPress}
 							placeholder="e.g., S24/29, P22/51"
-							class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 text-lg"
+							class="w-full px-4 py-3 border-2 border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 text-lg hover:border-blue-400"
 							disabled={loading}
 						/>
 					</div>
@@ -242,14 +250,14 @@
 					<button
 						onclick={fetchResults}
 						disabled={loading || !admissionNo.trim()}
-						class="flex-1 sm:flex-none px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200 font-semibold text-center"
+						class="flex-1 sm:flex-none px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200 font-semibold text-center border-2 border-blue-500 hover:border-blue-600"
 					>
 						{loading ? 'Searching...' : 'View Results'}
 					</button>
 					{#if searched}
 						<button
 							onclick={reset}
-							class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition duration-200 font-medium"
+							class="px-6 py-3 bg-gradient-to-r from-gray-100 to-slate-100 text-gray-700 rounded-lg hover:from-gray-200 hover:to-slate-200 transition duration-200 font-medium border-2 border-gray-300 hover:border-gray-400"
 						>
 							Clear
 						</button>
@@ -276,7 +284,7 @@
 
 		<!-- Error Message -->
 		{#if error}
-			<div class="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+			<div class="bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-200 rounded-xl p-4 mb-6">
 				<div class="flex items-center">
 					<div class="flex-shrink-0">
 						<svg class="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
@@ -290,56 +298,6 @@
 			</div>
 		{/if}
 
-		<!-- Simple Results Summary -->
-		{#if results.length > 0}
-			<div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-sm border border-blue-200 p-6 mb-6">
-				<div class="flex items-center justify-between mb-4">
-					<h3 class="text-lg font-semibold text-gray-900">Your Results</h3>
-					<div class="text-sm text-blue-600 font-medium bg-blue-100 px-3 py-1 rounded-full">
-						{filteredResults.length} test{filteredResults.length !== 1 ? 's' : ''} found
-					</div>
-				</div>
-				
-				<!-- Simple Subject Filter -->
-				{#if availableSubjects.length > 1}
-					{@const currentClass = getCurrentClass()}
-					{@const isJuniorClass = ['NUR', 'LKG', 'UKG', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'].includes(currentClass)}
-					<div class="mb-4">
-						<label for="subject-select" class="block text-sm font-medium text-gray-700 mb-2">
-							{isJuniorClass ? 'Exam Type' : 'Subject'}
-						</label>
-						<select 
-							id="subject-select"
-							bind:value={selectedSubject} 
-							onchange={handleSubjectChange}
-							class="w-full max-w-xs px-3 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white"
-						>
-							{#each availableSubjects as subject}
-								<option value={subject}>{subject}</option>
-							{/each}
-						</select>
-					</div>
-				{/if}
-
-				<!-- Simple Date Filter -->
-				{#if availableDates.length > 1}
-					<div>
-						<label for="date-select" class="block text-sm font-medium text-gray-700 mb-2">Test Date</label>
-						<select 
-							id="date-select"
-							bind:value={selectedDate} 
-							onchange={handleDateChange}
-							class="w-full max-w-xs px-3 py-2 border border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white"
-						>
-							<option value="all">All Dates</option>
-							{#each availableDates as date}
-								<option value={date}>{formatDate(date)}</option>
-							{/each}
-						</select>
-					</div>
-				{/if}
-			</div>
-		{/if}
 
 		<!-- Results Display -->
 		{#if filteredResults.length > 0}
@@ -347,11 +305,11 @@
 			{@const isJuniorClass = ['NUR', 'LKG', 'UKG', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'].includes(currentClass)}
 			
 			<!-- Results Header -->
-			<div class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl shadow-sm border border-indigo-200 p-6 mb-6">
+			<div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-sm border-2 border-blue-200 p-6 mb-6">
 				<div class="flex flex-col sm:flex-row sm:items-center justify-between">
 					<div>
 						<h2 class="text-xl font-semibold text-gray-900">
-							Test Results - {selectedSubject}
+							{studentName}'s Test Results
 						</h2>
 						<p class="text-sm text-gray-600 mt-1">
 							<span class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium mr-2">{admissionNo}</span>
@@ -370,22 +328,85 @@
 						</button>
 					</div>
 				</div>
+				
+				<!-- Quick Filters - Contextual Placement -->
+				<div class="mt-4 pt-4 border-t border-indigo-200">
+					<div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+						<div class="flex items-center">
+							<span class="text-sm font-medium text-gray-700 mr-3">
+								{filteredResults.length} test{filteredResults.length !== 1 ? 's' : ''} found
+							</span>
+						</div>
+						
+						<!-- Quick Filters -->
+						<div class="flex flex-col gap-3 w-full">
+							<!-- Subject Filter -->
+							{#if availableSubjects.length > 1}
+								<div class="w-full">
+									<div class="bg-purple-50 border border-purple-200 rounded-lg p-3">
+										<label for="subject-select" class="block text-sm font-semibold text-purple-800 mb-2 flex items-center">
+											<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+											</svg>
+											Select {isJuniorClass ? 'Exam Type' : 'Subject'}
+										</label>
+										<select 
+											id="subject-select"
+											bind:value={selectedSubject} 
+											onchange={handleSubjectChange}
+											class="w-full px-3 py-2.5 border-2 border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-sm font-medium text-gray-900 hover:border-purple-400 transition-colors cursor-pointer"
+										>
+											{#each availableSubjects as subject}
+												<option value={subject}>{subject}</option>
+											{/each}
+										</select>
+									</div>
+								</div>
+							{/if}
+
+							<!-- Date Filter -->
+							{#if availableDates.length > 1}
+								<div class="w-full">
+									<div class="bg-green-50 border border-green-200 rounded-lg p-3">
+										<label for="date-select" class="block text-sm font-semibold text-green-800 mb-2 flex items-center">
+											<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+											</svg>
+											Select Test Date
+										</label>
+										<select 
+											id="date-select"
+											bind:value={selectedDate} 
+											onchange={handleDateChange}
+											class="w-full px-3 py-2.5 border-2 border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white text-sm font-medium text-gray-900 hover:border-green-400 transition-colors cursor-pointer"
+										>
+											<option value="all">All Dates</option>
+											{#each availableDates as date}
+												<option value={date}>{formatDate(date)}</option>
+											{/each}
+										</select>
+									</div>
+								</div>
+							{/if}
+						</div>
+					</div>
+				</div>
 			</div>
 
 			<!-- Mobile-Optimized Results - Grouped by Subject -->
 			<div class="space-y-6">
 				{#each Object.entries(groupResultsBySubject(filteredResults)) as [subjectName, subjectResults]}
-					<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+					<div class="bg-white rounded-xl shadow-sm border-2 border-gray-200 overflow-hidden">
 						<!-- Subject Header -->
-						<div class="bg-gradient-to-r from-indigo-100 to-purple-100 px-6 py-4 border-b border-gray-200">
-							<h3 class="text-xl font-bold text-gray-900">{subjectName}</h3>
-							<p class="text-sm text-gray-600 mt-1">{subjectResults.length} test{subjectResults.length !== 1 ? 's' : ''}</p>
+						<div class="bg-gradient-to-r from-purple-50 to-pink-50 px-6 py-4 border-b-2 border-purple-200">
+							<h3 class="text-xl font-bold text-purple-900">{subjectName}</h3>
+							<p class="text-sm text-purple-700 mt-1">{subjectResults.length} test{subjectResults.length !== 1 ? 's' : ''}</p>
 						</div>
 						
 						<!-- Tests for this subject -->
 						<div class="divide-y divide-gray-100">
 							{#each subjectResults as result}
-								<div class="p-4 sm:p-6 hover:bg-gray-50 transition-colors duration-150">
+								<div class="p-4 sm:p-6 hover:bg-purple-50 transition-colors duration-150">
 									<!-- Test Header -->
 									<div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
 										<div class="flex-1">
@@ -416,14 +437,14 @@
 
 									<!-- Scores Row -->
 									{#if result.attendance}
-										<div class="text-center p-4 bg-green-50 rounded-lg">
+										<div class="text-center p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg">
 											<div class="text-3xl font-bold text-green-700">
 												{result.marks_obtained}<span class="text-3xl text-gray-600 font-bold">/{result.max_marks}</span>
 											</div>
 											<div class="text-sm text-green-600 font-medium">Score</div>
 										</div>
 									{:else}
-										<div class="text-center p-4 bg-gray-50 rounded-lg">
+										<div class="text-center p-4 bg-gradient-to-r from-gray-50 to-slate-50 rounded-lg">
 											<div class="text-sm text-gray-500 italic">Marks not available (Student was absent)</div>
 										</div>
 									{/if}

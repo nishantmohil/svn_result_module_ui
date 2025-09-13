@@ -84,6 +84,8 @@ INSERT INTO test_results (admission_no, subject_name, marks_obtained, max_marks,
 - **Smart Date Updates**: When changing test types, date options automatically update to show relevant dates
 - **Mobile-Optimized Cards**: Card-based layout that works perfectly on mobile devices
 - **Responsive Navigation**: Mobile-friendly navigation with hamburger menu and responsive logo sizing
+- **OTP-Style Input**: 5 separate input boxes for admission number entry - first for alphabet, rest for numbers, with automatic forward slash placement and mobile numeric keyboard support
+- **Smart URL Management**: URL parameters are cleared after successful search to prevent auto-search on page refresh
 - **Personalized Experience**: Shows student's name in the results header (e.g., "John's Test Results") instead of generic subject-based headers
 - **Subject Grouping**: Results are grouped by subject to avoid repetitive subject names and improve readability
 - **Beautiful Design Theme**: Consistent use of colored backgrounds, gradient effects, and thick borders throughout all components for a cohesive and visually appealing interface

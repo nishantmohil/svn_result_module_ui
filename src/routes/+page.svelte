@@ -3,6 +3,7 @@
 	import type { TestResult, TestResultWithStudent } from '$lib/types/database'
 	import { onMount } from 'svelte'
 	import { page } from '$app/stores'
+	import { goto } from '$app/navigation'
 
 	let admissionNo = $state('')
 	let studentName = $state('')
@@ -15,18 +16,127 @@
 	let availableSubjects: string[] = $state([])
 	let selectedDate = $state('all')
 	let availableDates: string[] = $state([])
+	
+	// OTP-style input states
+	let input1 = $state('') // Alphabet
+	let input2 = $state('') // Number
+	let input3 = $state('') // Number
+	let input4 = $state('') // Number
+	let input5 = $state('') // Number
 
 	// Check for admission parameter in URL and auto-search
 	onMount(() => {
 		const urlAdmission = $page.url.searchParams.get('admission')
 		if (urlAdmission) {
 			admissionNo = urlAdmission
+			// Parse the admission number into OTP inputs
+			parseAdmissionToInputs(urlAdmission)
 			// Small delay to show the auto-population visually
 			setTimeout(() => {
 				fetchResults()
 			}, 100)
 		}
 	})
+
+	// Parse admission number into OTP inputs
+	function parseAdmissionToInputs(admission: string) {
+		const parts = admission.split('/')
+		if (parts.length === 2) {
+			input1 = parts[0].charAt(0) || ''
+			input2 = parts[0].charAt(1) || ''
+			input3 = parts[0].charAt(2) || ''
+			input4 = parts[1].charAt(0) || ''
+			input5 = parts[1].charAt(1) || ''
+		}
+	}
+
+	// Build admission number from OTP inputs
+	function buildAdmissionNumber() {
+		const part1 = input1 + input2 + input3
+		const part2 = input4 + input5
+		return `${part1}/${part2}`
+	}
+
+	// Handle input changes and auto-focus
+	function handleInputChange(inputNumber: number, value: string, event: Event) {
+		// Remove any non-alphanumeric characters
+		let cleanValue = value.replace(/[^a-zA-Z0-9]/g, '')
+		
+		if (inputNumber === 1) {
+			// First input: only alphabets
+			cleanValue = cleanValue.replace(/[^a-zA-Z]/g, '').toUpperCase()
+			input1 = cleanValue
+			if (cleanValue && input2 === '') {
+				// Auto-focus to next input
+				setTimeout(() => {
+					const nextInput = document.getElementById('input-2')
+					nextInput?.focus()
+				}, 0)
+			}
+		} else {
+			// Other inputs: only numbers
+			cleanValue = cleanValue.replace(/[^0-9]/g, '')
+			
+			if (inputNumber === 2) {
+				input2 = cleanValue
+				if (cleanValue && input3 === '') {
+					setTimeout(() => {
+						const nextInput = document.getElementById('input-3')
+						nextInput?.focus()
+					}, 0)
+				}
+			} else if (inputNumber === 3) {
+				input3 = cleanValue
+				if (cleanValue && input4 === '') {
+					setTimeout(() => {
+						const nextInput = document.getElementById('input-4')
+						nextInput?.focus()
+					}, 0)
+				}
+			} else if (inputNumber === 4) {
+				input4 = cleanValue
+				if (cleanValue && input5 === '') {
+					setTimeout(() => {
+						const nextInput = document.getElementById('input-5')
+						nextInput?.focus()
+					}, 0)
+				}
+			} else if (inputNumber === 5) {
+				input5 = cleanValue
+			}
+		}
+		
+		// Update admission number
+		admissionNo = buildAdmissionNumber()
+	}
+
+	// Handle keydown events for backspace navigation
+	function handleKeyDown(inputNumber: number, event: KeyboardEvent) {
+		// Handle backspace
+		if (event.key === 'Backspace' && !(event.currentTarget as HTMLInputElement)?.value) {
+			if (inputNumber === 2 && input1) {
+				setTimeout(() => {
+					const prevInput = document.getElementById('input-1')
+					prevInput?.focus()
+				}, 0)
+			} else if (inputNumber === 3 && input2) {
+				setTimeout(() => {
+					const prevInput = document.getElementById('input-2')
+					prevInput?.focus()
+				}, 0)
+			} else if (inputNumber === 4 && input3) {
+				setTimeout(() => {
+					const prevInput = document.getElementById('input-3')
+					prevInput?.focus()
+				}, 0)
+			} else if (inputNumber === 5 && input4) {
+				setTimeout(() => {
+					const prevInput = document.getElementById('input-4')
+					prevInput?.focus()
+				}, 0)
+			}
+		}
+	}
 
 
 	async function fetchResults() {
@@ -82,6 +192,11 @@
 				
 				
 				updateFilteredResults()
+				
+				// Clear URL parameter after successful search to prevent auto-search on refresh
+				if ($page.url.searchParams.has('admission')) {
+					goto('/', { replaceState: true })
+				}
 			}
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'An error occurred while fetching results'
@@ -160,11 +275,6 @@
 	}
 	
 
-	function handleKeyPress(event: KeyboardEvent) {
-		if (event.key === 'Enter') {
-			fetchResults()
-		}
-	}
 
 	function groupResultsBySubject(results: TestResultWithStudent[]) {
 		return results.reduce((groups: Record<string, TestResultWithStudent[]>, result) => {
@@ -207,6 +317,13 @@
 		selectedDate = 'all'
 		error = ''
 		searched = false
+		studentName = ''
+		// Clear OTP inputs
+		input1 = ''
+		input2 = ''
+		input3 = ''
+		input4 = ''
+		input5 = ''
 	}
 </script>
 
@@ -230,20 +347,80 @@
 			<div class="bg-white rounded-xl shadow-sm border-2 border-blue-200 p-8 mb-8">
 			<div class="space-y-6">
 				<div>
-					<label for="admission-no" class="block text-sm font-semibold text-gray-900 mb-3">
+					<label for="input-1" class="block text-sm font-semibold text-gray-900 mb-3">
 						Admission Number
 					</label>
-					<div class="relative">
+					<div class="flex items-center justify-center space-x-2">
+						<!-- Input 1: Alphabet -->
 						<input
-							id="admission-no"
+							id="input-1"
 							type="text"
-							bind:value={admissionNo}
-							onkeypress={handleKeyPress}
-							placeholder="e.g., S24/29, P22/51"
-							class="w-full px-4 py-3 border-2 border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 text-lg hover:border-blue-400"
+							bind:value={input1}
+							oninput={(e) => handleInputChange(1, e.currentTarget.value, e)}
+							onkeydown={(e) => handleKeyDown(1, e)}
+							maxlength="1"
+							class="w-12 h-12 text-center text-lg font-bold border-2 border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 hover:border-blue-400 uppercase"
+							disabled={loading}
+						/>
+						
+						<!-- Input 2: Number -->
+						<input
+							id="input-2"
+							type="text"
+							inputmode="numeric"
+							bind:value={input2}
+							oninput={(e) => handleInputChange(2, e.currentTarget.value, e)}
+							onkeydown={(e) => handleKeyDown(2, e)}
+							maxlength="1"
+							class="w-12 h-12 text-center text-lg font-bold border-2 border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 hover:border-blue-400"
+							disabled={loading}
+						/>
+						
+						<!-- Input 3: Number -->
+						<input
+							id="input-3"
+							type="text"
+							inputmode="numeric"
+							bind:value={input3}
+							oninput={(e) => handleInputChange(3, e.currentTarget.value, e)}
+							onkeydown={(e) => handleKeyDown(3, e)}
+							maxlength="1"
+							class="w-12 h-12 text-center text-lg font-bold border-2 border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 hover:border-blue-400"
+							disabled={loading}
+						/>
+						
+						<!-- Forward Slash (Fixed) -->
+						<div class="w-8 h-12 flex items-center justify-center">
+							<span class="text-2xl font-bold text-gray-500">/</span>
+						</div>
+						
+						<!-- Input 4: Number -->
+						<input
+							id="input-4"
+							type="text"
+							inputmode="numeric"
+							bind:value={input4}
+							oninput={(e) => handleInputChange(4, e.currentTarget.value, e)}
+							onkeydown={(e) => handleKeyDown(4, e)}
+							maxlength="1"
+							class="w-12 h-12 text-center text-lg font-bold border-2 border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 hover:border-blue-400"
+							disabled={loading}
+						/>
+						
+						<!-- Input 5: Number -->
+						<input
+							id="input-5"
+							type="text"
+							inputmode="numeric"
+							bind:value={input5}
+							oninput={(e) => handleInputChange(5, e.currentTarget.value, e)}
+							onkeydown={(e) => handleKeyDown(5, e)}
+							maxlength="1"
+							class="w-12 h-12 text-center text-lg font-bold border-2 border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 hover:border-blue-400"
 							disabled={loading}
 						/>
 					</div>
+					<p class="text-xs text-gray-500 mt-2 text-center">Format: H34/89 (First letter, then numbers)</p>
 				</div>
 				
 				<div class="flex flex-col sm:flex-row gap-3">

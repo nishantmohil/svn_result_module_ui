@@ -78,6 +78,20 @@ INSERT INTO test_results (admission_no, subject_name, marks_obtained, max_marks,
 - The grading system has been removed from the results display
 - Only marks, percentage, and attendance status are shown
 
+### Simple & Clean Interface
+- **Easy-to-Use Filters**: Simple dropdown menus for subject/exam type and date selection
+- **Contextual Date Filtering**: Date filter shows only dates available for the selected test type/subject
+- **Smart Date Updates**: When changing test types, date options automatically update to show relevant dates
+- **Mobile-Optimized Cards**: Card-based layout that works perfectly on mobile devices
+- **Subject Grouping**: Results are grouped by subject to avoid repetitive subject names and improve readability
+- **Colorful Design**: Vibrant colors and gradients for better visual appeal while maintaining professionalism
+- **Smart Attendance Display**: Only shows "Absent" status when student was absent, hides "Present" status for cleaner look
+- **Score-Focused Design**: Emphasizes actual marks obtained over percentage for better clarity
+- **Neutral Color Scheme**: Uses gray for maximum marks to create better visual balance
+- **Consistent Badge Design**: Percentage displayed as small badges in the top row with date and test type
+- **Auto-Hide Search Form**: Search form disappears after results are found to focus on the data
+- **Student-Friendly Design**: Minimal complexity, maximum clarity for easy result viewing
+
 Note: The application supports various admission number formats like `S24/29`, `S25/56`, `P22/51`, `P21/37A`, etc.
 
 ## Environment Setup

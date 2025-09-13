@@ -12,6 +12,8 @@
 	let searched = $state(false)
 	let selectedSubject = $state('all')
 	let availableSubjects: string[] = $state([])
+	let selectedDate = $state('all')
+	let availableDates: string[] = $state([])
 
 	// Check for admission parameter in URL and auto-search
 	onMount(() => {
@@ -69,6 +71,12 @@
 				
 				// Select first option by default
 				selectedSubject = availableSubjects[0] || ''
+				selectedDate = 'all' // Show all dates by default
+				
+				// Update available dates based on selected subject/exam type
+				updateAvailableDates()
+				
+				
 				updateFilteredResults()
 			}
 		} catch (err) {
@@ -76,6 +84,7 @@
 			results = []
 			filteredResults = []
 			availableSubjects = []
+			availableDates = []
 		} finally {
 			loading = false
 		}
@@ -86,13 +95,22 @@
 		const currentClass = getCurrentClass()
 		const isJuniorClass = ['NUR', 'LKG', 'UKG', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'].includes(currentClass)
 		
+		// First filter by subject/exam type
+		let filtered = results
 		if (isJuniorClass) {
 			// Filter by exam type for junior classes
-			filteredResults = results.filter(result => result.test_category === selectedSubject)
+			filtered = results.filter(result => result.test_category === selectedSubject)
 		} else {
 			// Filter by subject for senior classes
-			filteredResults = results.filter(result => result.subject_name === selectedSubject)
+			filtered = results.filter(result => result.subject_name === selectedSubject)
 		}
+		
+		// Then filter by date if a specific date is selected
+		if (selectedDate !== 'all') {
+			filtered = filtered.filter(result => result.test_date === selectedDate)
+		}
+		
+		filteredResults = filtered
 	}
 	
 	function getCurrentClass() {
@@ -103,14 +121,53 @@
 		return 'X' // Default fallback
 	}
 
+	function updateAvailableDates() {
+		// Determine if this is a junior class (below IX)
+		const currentClass = getCurrentClass()
+		const isJuniorClass = ['NUR', 'LKG', 'UKG', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'].includes(currentClass)
+		
+		// Filter results based on selected subject/exam type first
+		let subjectFilteredResults = results
+		if (isJuniorClass) {
+			// Filter by exam type for junior classes
+			subjectFilteredResults = results.filter(result => result.test_category === selectedSubject)
+		} else {
+			// Filter by subject for senior classes
+			subjectFilteredResults = results.filter(result => result.subject_name === selectedSubject)
+		}
+		
+		// Extract unique dates from the filtered results
+		availableDates = [...new Set(subjectFilteredResults.map(r => r.test_date))].sort().reverse() // Most recent first
+		
+		// Reset date selection if current selection is not available
+		if (selectedDate !== 'all' && !availableDates.includes(selectedDate)) {
+			selectedDate = 'all'
+		}
+	}
+
 	function handleSubjectChange() {
+		updateAvailableDates()
 		updateFilteredResults()
 	}
+	
+	function handleDateChange() {
+		updateFilteredResults()
+	}
+	
 
 	function handleKeyPress(event: KeyboardEvent) {
 		if (event.key === 'Enter') {
 			fetchResults()
 		}
+	}
+
+	function groupResultsBySubject(results: TestResultWithStudent[]) {
+		return results.reduce((groups: Record<string, TestResultWithStudent[]>, result) => {
+			const key = result.subject_name;
+			if (!groups[key]) groups[key] = [];
+			groups[key].push(result);
+			return groups;
+		}, {})
 	}
 
 	function calculatePercentage(obtained: number, max: number): string {
@@ -140,7 +197,9 @@
 		results = []
 		filteredResults = []
 		availableSubjects = []
+		availableDates = []
 		selectedSubject = ''
+		selectedDate = 'all'
 		error = ''
 		searched = false
 	}
@@ -158,8 +217,9 @@
 			<p class="text-gray-600">Enter your admission number to access your academic performance</p>
 		</div>
 
-		<!-- Search Form -->
-		<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-8 mb-8">
+		<!-- Search Form - Only show if no results -->
+		{#if !searched || results.length === 0}
+			<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-8 mb-8">
 			<div class="space-y-6">
 				<div>
 					<label for="admission-no" class="block text-sm font-semibold text-gray-900 mb-3">
@@ -212,6 +272,7 @@
 				</div>
 			</div>
 		</div>
+		{/if}
 
 		<!-- Error Message -->
 		{#if error}
@@ -229,27 +290,54 @@
 			</div>
 		{/if}
 
-		<!-- Subject/Exam Type Filter -->
-		{#if results.length > 0 && availableSubjects.length > 0}
-			{@const currentClass = getCurrentClass()}
-			{@const isJuniorClass = ['NUR', 'LKG', 'UKG', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'].includes(currentClass)}
-			<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-				<h3 class="text-lg font-semibold text-gray-900 mb-4">
-					Filter by {isJuniorClass ? 'Exam Type' : 'Subject'}
-				</h3>
-				<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-					{#each availableSubjects as subject}
-						<button
-							onclick={() => { selectedSubject = subject; updateFilteredResults(); }}
-							class="p-3 rounded-lg border-2 transition-all duration-200 text-center font-medium text-sm
-								{selectedSubject === subject 
-									? 'border-blue-500 bg-blue-50 text-blue-700' 
-									: 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'}"
-						>
-							{subject}
-						</button>
-					{/each}
+		<!-- Simple Results Summary -->
+		{#if results.length > 0}
+			<div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-sm border border-blue-200 p-6 mb-6">
+				<div class="flex items-center justify-between mb-4">
+					<h3 class="text-lg font-semibold text-gray-900">Your Results</h3>
+					<div class="text-sm text-blue-600 font-medium bg-blue-100 px-3 py-1 rounded-full">
+						{filteredResults.length} test{filteredResults.length !== 1 ? 's' : ''} found
+					</div>
 				</div>
+				
+				<!-- Simple Subject Filter -->
+				{#if availableSubjects.length > 1}
+					{@const currentClass = getCurrentClass()}
+					{@const isJuniorClass = ['NUR', 'LKG', 'UKG', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'].includes(currentClass)}
+					<div class="mb-4">
+						<label for="subject-select" class="block text-sm font-medium text-gray-700 mb-2">
+							{isJuniorClass ? 'Exam Type' : 'Subject'}
+						</label>
+						<select 
+							id="subject-select"
+							bind:value={selectedSubject} 
+							onchange={handleSubjectChange}
+							class="w-full max-w-xs px-3 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white"
+						>
+							{#each availableSubjects as subject}
+								<option value={subject}>{subject}</option>
+							{/each}
+						</select>
+					</div>
+				{/if}
+
+				<!-- Simple Date Filter -->
+				{#if availableDates.length > 1}
+					<div>
+						<label for="date-select" class="block text-sm font-medium text-gray-700 mb-2">Test Date</label>
+						<select 
+							id="date-select"
+							bind:value={selectedDate} 
+							onchange={handleDateChange}
+							class="w-full max-w-xs px-3 py-2 border border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white"
+						>
+							<option value="all">All Dates</option>
+							{#each availableDates as date}
+								<option value={date}>{formatDate(date)}</option>
+							{/each}
+						</select>
+					</div>
+				{/if}
 			</div>
 		{/if}
 
@@ -257,74 +345,93 @@
 		{#if filteredResults.length > 0}
 			{@const currentClass = getCurrentClass()}
 			{@const isJuniorClass = ['NUR', 'LKG', 'UKG', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'].includes(currentClass)}
-			<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-				<div class="bg-gray-50 px-6 py-5 border-b border-gray-200">
-					<div class="flex items-center justify-between">
-						<div>
-							<h2 class="text-xl font-semibold text-gray-900">
-								Test Results - {selectedSubject}
-							</h2>
-							<p class="text-sm text-gray-600 mt-1">
-								Admission Number: <span class="font-medium">{admissionNo}</span> | 
-								Class: <span class="font-medium">{currentClass}</span> |
-								{filteredResults.length} test{filteredResults.length !== 1 ? 's' : ''} found
-							</p>
-						</div>
+			
+			<!-- Results Header -->
+			<div class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl shadow-sm border border-indigo-200 p-6 mb-6">
+				<div class="flex flex-col sm:flex-row sm:items-center justify-between">
+					<div>
+						<h2 class="text-xl font-semibold text-gray-900">
+							Test Results - {selectedSubject}
+						</h2>
+						<p class="text-sm text-gray-600 mt-1">
+							<span class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium mr-2">{admissionNo}</span>
+							<span class="inline-block bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium mr-2">Class {currentClass}</span>
+							{#if selectedDate !== 'all'}
+								<span class="inline-block bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">{formatDate(selectedDate)}</span>
+							{/if}
+						</p>
+					</div>
+					<div class="mt-2 sm:mt-0">
+						<button
+							onclick={reset}
+							class="text-sm text-gray-500 hover:text-gray-700 underline"
+						>
+							Search Another Student
+						</button>
 					</div>
 				</div>
+			</div>
 
-				<div class="overflow-x-auto">
-					<table class="w-full">
-						<thead class="bg-gray-50 border-b border-gray-200">
-							<tr>
-								<th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Test Details</th>
-								<th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Score</th>
-								<th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Percentage</th>
-								<th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Attendance</th>
-							</tr>
-						</thead>
-						<tbody class="bg-white divide-y divide-gray-100">
-							{#each filteredResults as result}
-								<tr class="hover:bg-gray-50 transition duration-150">
-									<td class="px-6 py-4">
-										<div class="text-sm font-semibold text-gray-900">{result.subject_name}</div>
-										<div class="text-xs text-gray-500 mt-1">
-											{formatDate(result.test_date)} • {result.test_category || 'Regular Test'}
+			<!-- Mobile-Optimized Results - Grouped by Subject -->
+			<div class="space-y-6">
+				{#each Object.entries(groupResultsBySubject(filteredResults)) as [subjectName, subjectResults]}
+					<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+						<!-- Subject Header -->
+						<div class="bg-gradient-to-r from-indigo-100 to-purple-100 px-6 py-4 border-b border-gray-200">
+							<h3 class="text-xl font-bold text-gray-900">{subjectName}</h3>
+							<p class="text-sm text-gray-600 mt-1">{subjectResults.length} test{subjectResults.length !== 1 ? 's' : ''}</p>
+						</div>
+						
+						<!-- Tests for this subject -->
+						<div class="divide-y divide-gray-100">
+							{#each subjectResults as result}
+								<div class="p-4 sm:p-6 hover:bg-gray-50 transition-colors duration-150">
+									<!-- Test Header -->
+									<div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
+										<div class="flex-1">
+											<div class="flex flex-wrap items-center gap-2 text-sm text-gray-500">
+												<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+													{formatDate(result.test_date)}
+												</span>
+												{#if result.test_category}
+													<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+														{result.test_category}
+													</span>
+												{/if}
+												{#if result.attendance}
+													<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+														{calculatePercentage(result.marks_obtained, result.max_marks)}%
+													</span>
+												{/if}
+											</div>
 										</div>
-									</td>
-									<td class="px-6 py-4">
-										{#if result.attendance}
-											<div class="text-lg font-bold text-gray-900">
-												{result.marks_obtained}<span class="text-sm text-gray-500 font-normal">/{result.max_marks}</span>
-											</div>
-										{:else}
-											<div class="text-sm text-gray-500 italic">
-												Marks not available (Absent)
+										{#if !result.attendance}
+											<div class="mt-2 sm:mt-0">
+												<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
+													Absent
+												</span>
 											</div>
 										{/if}
-									</td>
-									<td class="px-6 py-4">
-										{#if result.attendance}
-											<div class="text-sm font-semibold text-gray-900">
-												{calculatePercentage(result.marks_obtained, result.max_marks)}%
+									</div>
+
+									<!-- Scores Row -->
+									{#if result.attendance}
+										<div class="text-center p-4 bg-green-50 rounded-lg">
+											<div class="text-3xl font-bold text-green-700">
+												{result.marks_obtained}<span class="text-3xl text-gray-600 font-bold">/{result.max_marks}</span>
 											</div>
-										{:else}
-											<div class="text-sm text-gray-500 italic">
-												N/A
-											</div>
-										{/if}
-									</td>
-									<td class="px-6 py-4">
-										<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold
-											{result.attendance ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-											{result.attendance ? 'Present' : 'Absent'}
-										</span>
-									</td>
-								</tr>
+											<div class="text-sm text-green-600 font-medium">Score</div>
+										</div>
+									{:else}
+										<div class="text-center p-4 bg-gray-50 rounded-lg">
+											<div class="text-sm text-gray-500 italic">Marks not available (Student was absent)</div>
+										</div>
+									{/if}
+								</div>
 							{/each}
-						</tbody>
-					</table>
-				</div>
+						</div>
+					</div>
+				{/each}
 			</div>
 		{:else if searched && !loading && !error && results.length > 0 && filteredResults.length === 0}
 			<div class="bg-yellow-50 border border-yellow-200 rounded-xl p-6">

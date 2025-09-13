@@ -64,6 +64,20 @@ INSERT INTO test_results (admission_no, subject_name, marks_obtained, max_marks,
 ('P23/75', 'Hindi', 15.00, 15.00, '2025-05-06', true, 'FA1');
 ```
 
+## Important Notes for Result Display
+
+### Attendance-Based Display
+- **Absent students**: Marks are hidden, only attendance status is shown
+- **Present students**: Full marks and percentage are displayed
+
+### Class-Based Filtering
+- **Classes below IX** (NUR, LKG, UKG, I-VIII): Results are filtered by **Exam Type** instead of Subject
+- **Classes IX and above**: Results are filtered by **Subject** as usual
+
+### Grading System
+- The grading system has been removed from the results display
+- Only marks, percentage, and attendance status are shown
+
 Note: The application supports various admission number formats like `S24/29`, `S25/56`, `P22/51`, `P21/37A`, etc.
 
 ## Environment Setup

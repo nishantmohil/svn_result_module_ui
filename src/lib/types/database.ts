@@ -11,6 +11,7 @@ export type Database = {
           test_date: string
           attendance: boolean | null
           test_category: string | null
+          class?: string
         }
         Insert: {
           id?: number
@@ -83,3 +84,10 @@ export type Database = {
 
 export type TestResult = Database['public']['Tables']['test_results']['Row']
 export type Student = Database['public']['Tables']['students']['Row']
+
+// Extended type for test results with student information
+export type TestResultWithStudent = TestResult & {
+  students?: {
+    class: string
+  }
+}

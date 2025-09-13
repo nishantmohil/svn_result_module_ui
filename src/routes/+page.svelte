@@ -336,8 +336,8 @@
 		<!-- Page Header - Only show when no results -->
 		{#if !searched || results.length === 0}
 			<div class="mb-8">
-				<h1 class="text-3xl font-bold text-gray-900 mb-2">View Test Results</h1>
-				<p class="text-gray-600">Enter your admission number to access your academic performance</p>
+				<h1 class="text-xl font-bold text-gray-900 mb-2 text-center">S.V.N  Academic reporting module </h1>
+				<p class="text-gray-600 text-center">Enter your admission number to access your academic performance</p>
 			</div>
 		{/if}
 

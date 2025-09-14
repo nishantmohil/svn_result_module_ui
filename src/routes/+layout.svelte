@@ -20,14 +20,14 @@
 </svelte:head>
 
 <!-- Navigation -->
-<nav class="bg-white shadow-sm border-b-2 border-gray-200">
+<nav class="bg-white shadow-sm border-b-2 border-blue-200">
 	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 		<div class="flex justify-between items-center h-16">
 			<!-- Logo and School Name -->
 			<div class="flex items-center">
 				<div class="flex-shrink-0">
 					<a href="/" class="flex items-center space-x-2 sm:space-x-3" onclick={closeMobileMenu}>
-						<div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-lg flex items-center justify-center">
+						<div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-lg flex items-center justify-center border-2 border-blue-500">
 							<span class="text-white font-bold text-sm sm:text-lg">S</span>
 						</div>
 						<div>
@@ -39,16 +39,16 @@
 			</div>
 
 			<!-- Desktop Navigation Links -->
-			<div class="hidden md:flex items-center space-x-8">
+			<div class="hidden md:flex items-center space-x-4">
 				<a 
 					href="/" 
-					class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors duration-200 {$page.url.pathname === '/' ? 'text-blue-600 border-b-2 border-blue-600' : ''}"
+					class="px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 {$page.url.pathname === '/' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-2 border-blue-500 shadow-sm' : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50 border-2 border-transparent hover:border-blue-200'}"
 				>
 					View Results
 				</a>
 				<a 
 					href="/lookup" 
-					class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors duration-200 {$page.url.pathname === '/lookup' ? 'text-blue-600 border-b-2 border-blue-600' : ''}"
+					class="px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 {$page.url.pathname === '/lookup' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white border-2 border-purple-500 shadow-sm' : 'text-gray-700 hover:text-purple-600 hover:bg-purple-50 border-2 border-transparent hover:border-purple-200'}"
 				>
 					Find Admission Number
 				</a>
@@ -58,7 +58,7 @@
 			<div class="md:hidden">
 				<button
 					onclick={toggleMobileMenu}
-					class="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 transition-colors duration-200"
+					class="inline-flex items-center justify-center p-2 rounded-lg text-gray-700 hover:text-blue-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 transition-all duration-200 border-2 border-transparent hover:border-blue-200"
 					aria-expanded="false"
 				>
 					<span class="sr-only">Open main menu</span>
@@ -73,18 +73,18 @@
 		<!-- Mobile Navigation Menu -->
 		{#if mobileMenuOpen}
 			<div class="md:hidden">
-				<div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-t-2 border-blue-200">
+				<div class="px-2 pt-2 pb-3 space-y-2 sm:px-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-t-2 border-blue-200">
 					<a 
 						href="/" 
 						onclick={closeMobileMenu}
-						class="block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 {$page.url.pathname === '/' ? 'text-blue-600 bg-blue-100' : 'text-gray-700 hover:text-blue-600 hover:bg-blue-100'}"
+						class="block px-4 py-3 rounded-lg text-base font-semibold transition-all duration-200 {$page.url.pathname === '/' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-2 border-blue-500 shadow-sm' : 'text-gray-700 hover:text-blue-600 hover:bg-blue-100 border-2 border-transparent hover:border-blue-200'}"
 					>
 						View Results
 					</a>
 					<a 
 						href="/lookup" 
 						onclick={closeMobileMenu}
-						class="block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 {$page.url.pathname === '/lookup' ? 'text-blue-600 bg-blue-100' : 'text-gray-700 hover:text-blue-600 hover:bg-blue-100'}"
+						class="block px-4 py-3 rounded-lg text-base font-semibold transition-all duration-200 {$page.url.pathname === '/lookup' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white border-2 border-purple-500 shadow-sm' : 'text-gray-700 hover:text-purple-600 hover:bg-purple-100 border-2 border-transparent hover:border-purple-200'}"
 					>
 						Find Admission Number
 					</a>
@@ -104,7 +104,7 @@
 	<div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
 		<div class="text-center">
 			<p class="text-sm text-gray-500">
-				© 2024 SVN NAHAN. All rights reserved. | Student Result Management System
+				© 2025 SVN NAHAN. All rights reserved. | Student Result Management System
 			</p>
 		</div>
 	</div>

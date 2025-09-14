@@ -12,10 +12,11 @@
 	let loading = $state(false)
 	let error = $state('')
 	let searched = $state(false)
-	let selectedSubject = $state('all')
+	let selectedSubject = $state('')
 	let availableSubjects: string[] = $state([])
 	let selectedDate = $state('all')
 	let availableDates: string[] = $state([])
+	let showResults = $state(false)
 	
 	// OTP-style input states
 	let input1 = $state('') // Alphabet
@@ -183,15 +184,13 @@
 					availableSubjects = [...new Set(results.map(r => r.subject_name))].sort()
 				}
 				
-				// Select first option by default
-				selectedSubject = availableSubjects[0] || ''
+				// Don't select any subject by default - let user choose
+				selectedSubject = ''
 				selectedDate = 'all' // Show all dates by default
+				showResults = false // Don't show results yet
 				
 				// Update available dates based on selected subject/exam type
 				updateAvailableDates()
-				
-				
-				updateFilteredResults()
 				
 				// Clear URL parameter after successful search to prevent auto-search on refresh
 				if ($page.url.searchParams.has('admission')) {
@@ -274,6 +273,15 @@
 		updateFilteredResults()
 	}
 	
+	function viewResults() {
+		if (!selectedSubject) {
+			error = 'Please select a subject first'
+			return
+		}
+		showResults = true
+		updateFilteredResults()
+	}
+	
 
 
 	function groupResultsBySubject(results: TestResultWithStudent[]) {
@@ -315,6 +323,7 @@
 		availableDates = []
 		selectedSubject = ''
 		selectedDate = 'all'
+		showResults = false
 		error = ''
 		searched = false
 		studentName = ''
@@ -333,8 +342,8 @@
 
 <div class="py-8 px-4">
 	<div class="max-w-4xl mx-auto">
-		<!-- Page Header - Only show when no results -->
-		{#if !searched || results.length === 0}
+		<!-- Page Header - Only show when no search has been performed -->
+		{#if !searched}
 			<div class="mb-8">
 				<h1 class="text-xl font-bold text-gray-900 mb-2 text-center">S.V.N  Academic reporting module </h1>
 				<p class="text-gray-600 text-center">Enter your admission number to access your academic performance</p>
@@ -342,8 +351,8 @@
 		{/if}
 
 
-		<!-- Search Form - Only show if no results -->
-		{#if !searched || results.length === 0}
+		<!-- Search Form - Only show if no search has been performed -->
+		{#if !searched}
 			<div class="bg-white rounded-xl shadow-sm border-2 border-blue-200 p-8 mb-8">
 			<div class="space-y-6">
 				<div>
@@ -475,9 +484,124 @@
 			</div>
 		{/if}
 
+		<!-- Subject and Date Selection Interface -->
+		{#if searched && !showResults && results.length > 0}
+			{@const currentClass = getCurrentClass()}
+			{@const isJuniorClass = ['NUR', 'LKG', 'UKG', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'].includes(currentClass)}
+			
+			<div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-sm border-2 border-blue-200 p-6 mb-6">
+				<div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6">
+					<div>
+						<h2 class="text-xl font-semibold text-gray-900">
+							{studentName}'s Test Results
+						</h2>
+						<p class="text-sm text-gray-600 mt-1">
+							<span class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium mr-2">{admissionNo}</span>
+							<span class="inline-block bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium mr-2">Class {currentClass}</span>
+						</p>
+					</div>
+					<div class="mt-2 sm:mt-0">
+						<button
+							onclick={reset}
+							class="text-sm text-gray-500 hover:text-gray-700 underline"
+						>
+							Search Another Student
+						</button>
+					</div>
+				</div>
+				
+				<!-- Subject and Date Selection -->
+				<div class="space-y-6">
+					<!-- Subject Selection -->
+					{#if availableSubjects.length > 0}
+						<div>
+							{#if isJuniorClass}
+								<!-- Dropdown for Junior Classes -->
+								<div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+									<label for="subject-select" class="block text-sm font-semibold text-purple-800 mb-3 flex items-center">
+										<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+										</svg>
+										Select Exam Type
+									</label>
+									<select 
+										id="subject-select"
+										bind:value={selectedSubject} 
+										onchange={handleSubjectChange}
+										class="w-full px-3 py-2.5 border-2 border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-sm font-medium text-gray-900 hover:border-purple-400 transition-colors cursor-pointer"
+									>
+										<option value="">Choose an exam type...</option>
+										{#each availableSubjects as subject}
+											<option value={subject}>{subject}</option>
+										{/each}
+									</select>
+								</div>
+							{:else}
+								<!-- Tabs for Senior Classes (IX and above) -->
+								<div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+									<div class="block text-sm font-semibold text-purple-800 mb-3 flex items-center">
+										<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+										</svg>
+										Select Subject
+									</div>
+									<div class="flex flex-wrap gap-2">
+										{#each availableSubjects as subject}
+											<button
+												onclick={() => {
+													selectedSubject = subject;
+													handleSubjectChange();
+												}}
+												class="px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 border-2 {selectedSubject === subject ? 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 border-purple-300 shadow-sm' : 'text-purple-700 hover:text-purple-600 hover:bg-purple-50 border-purple-200 hover:border-purple-300'}"
+											>
+												{subject}
+											</button>
+										{/each}
+									</div>
+								</div>
+							{/if}
+						</div>
+					{/if}
+
+					<!-- Date Selection -->
+					{#if availableDates.length > 1}
+						<div class="bg-green-50 border border-green-200 rounded-lg p-4">
+							<label for="date-select" class="block text-sm font-semibold text-green-800 mb-3 flex items-center">
+								<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+								</svg>
+								Select Test Date
+							</label>
+							<select 
+								id="date-select"
+								bind:value={selectedDate} 
+								onchange={handleDateChange}
+								class="w-full px-3 py-2.5 border-2 border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white text-sm font-medium text-gray-900 hover:border-green-400 transition-colors cursor-pointer"
+							>
+								<option value="all">All Dates</option>
+								{#each availableDates as date}
+									<option value={date}>{formatDate(date)}</option>
+								{/each}
+							</select>
+						</div>
+					{/if}
+
+					<!-- View Results Button -->
+					<div class="flex justify-center">
+						<button
+							onclick={viewResults}
+							disabled={!selectedSubject}
+							class="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200 font-semibold text-lg border-2 border-blue-500 hover:border-blue-600"
+						>
+							View Results
+						</button>
+					</div>
+				</div>
+			</div>
+		{/if}
 
 		<!-- Results Display -->
-		{#if filteredResults.length > 0}
+		{#if searched && showResults && filteredResults.length > 0}
 			{@const currentClass = getCurrentClass()}
 			{@const isJuniorClass = ['NUR', 'LKG', 'UKG', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'].includes(currentClass)}
 			
@@ -520,24 +644,50 @@
 							<!-- Subject Filter -->
 							{#if availableSubjects.length > 1}
 								<div class="w-full">
-									<div class="bg-purple-50 border border-purple-200 rounded-lg p-3">
-										<label for="subject-select" class="block text-sm font-semibold text-purple-800 mb-2 flex items-center">
-											<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
-											</svg>
-											Select {isJuniorClass ? 'Exam Type' : 'Subject'}
-										</label>
-										<select 
-											id="subject-select"
-											bind:value={selectedSubject} 
-											onchange={handleSubjectChange}
-											class="w-full px-3 py-2.5 border-2 border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-sm font-medium text-gray-900 hover:border-purple-400 transition-colors cursor-pointer"
-										>
-											{#each availableSubjects as subject}
-												<option value={subject}>{subject}</option>
-											{/each}
-										</select>
-									</div>
+									{#if isJuniorClass}
+										<!-- Dropdown for Junior Classes -->
+										<div class="bg-purple-50 border border-purple-200 rounded-lg p-3">
+											<label for="subject-select" class="block text-sm font-semibold text-purple-800 mb-2 flex items-center">
+												<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+												</svg>
+												Select Exam Type
+											</label>
+											<select 
+												id="subject-select"
+												bind:value={selectedSubject} 
+												onchange={handleSubjectChange}
+												class="w-full px-3 py-2.5 border-2 border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-sm font-medium text-gray-900 hover:border-purple-400 transition-colors cursor-pointer"
+											>
+												{#each availableSubjects as subject}
+													<option value={subject}>{subject}</option>
+												{/each}
+											</select>
+										</div>
+									{:else}
+										<!-- Tabs for Senior Classes (IX and above) -->
+										<div class="bg-purple-50 border border-purple-200 rounded-lg p-3">
+											<div class="block text-sm font-semibold text-purple-800 mb-3 flex items-center">
+												<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+												</svg>
+												Select Subject
+											</div>
+											<div class="flex flex-wrap gap-2">
+												{#each availableSubjects as subject}
+													<button
+														onclick={() => {
+															selectedSubject = subject;
+															handleSubjectChange();
+														}}
+														class="px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 border-2 {selectedSubject === subject ? 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 border-purple-300 shadow-sm' : 'text-purple-700 hover:text-purple-600 hover:bg-purple-50 border-purple-200 hover:border-purple-300'}"
+													>
+														{subject}
+													</button>
+												{/each}
+											</div>
+										</div>
+									{/if}
 								</div>
 							{/if}
 
@@ -573,7 +723,7 @@
 			<!-- Mobile-Optimized Results - Grouped by Subject -->
 			<div class="space-y-6">
 				{#each Object.entries(groupResultsBySubject(filteredResults)) as [subjectName, subjectResults]}
-					<div class="bg-white rounded-xl shadow-sm border-2 border-gray-200 overflow-hidden">
+					<div class="bg-white rounded-xl shadow-sm border-2 border-purple-200 overflow-hidden">
 						<!-- Subject Header -->
 						<div class="bg-gradient-to-r from-purple-50 to-pink-50 px-6 py-4 border-b-2 border-purple-200">
 							<h3 class="text-xl font-bold text-purple-900">{subjectName}</h3>
@@ -588,16 +738,16 @@
 									<div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
 										<div class="flex-1">
 											<div class="flex flex-wrap items-center gap-2 text-sm text-gray-500">
-												<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+												<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border-2 border-blue-200">
 													{formatDate(result.test_date)}
 												</span>
 												{#if result.test_category}
-													<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+													<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 border-2 border-purple-200">
 														{result.test_category}
 													</span>
 												{/if}
 												{#if result.attendance}
-													<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+													<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 border-2 border-orange-200">
 														{calculatePercentage(result.marks_obtained, result.max_marks)}%
 													</span>
 												{/if}
@@ -614,7 +764,7 @@
 
 									<!-- Scores Row -->
 									{#if result.attendance}
-										<div class="text-center p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg">
+										<div class="text-center p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border-2 border-green-200">
 											<div class="text-3xl font-bold text-green-700">
 												{result.marks_obtained}<span class="text-3xl text-gray-600 font-bold">/{result.max_marks}</span>
 											</div>
@@ -631,7 +781,7 @@
 					</div>
 				{/each}
 			</div>
-		{:else if searched && !loading && !error && results.length > 0 && filteredResults.length === 0}
+		{:else if searched && showResults && !loading && !error && results.length > 0 && filteredResults.length === 0}
 			<div class="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
 				<div class="flex items-center">
 					<div class="flex-shrink-0">
@@ -645,7 +795,7 @@
 					</div>
 				</div>
 			</div>
-		{:else if searched && !loading && !error && results.length === 0}
+		{:else if searched && showResults && !loading && !error && results.length === 0}
 			<div class="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
 				<div class="flex items-center">
 					<div class="flex-shrink-0">

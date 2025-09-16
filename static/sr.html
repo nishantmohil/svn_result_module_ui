@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Social Media Use Questionnaire</title>
+  <style>
+    :root{
+      --border:#222;
+      --cell-size:36px;
+      --gap:8px;
+      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color:#111;
+    }
+
+    body{
+      margin:20px;
+      background:#fafafa;
+    }
+
+    .card{
+      max-width:1100px;
+      margin:0 auto;
+      background:white;
+      border:1px solid #ddd;
+      padding:18px;
+      box-shadow:0 2px 6px rgba(0,0,0,0.04);
+    }
+
+    h1{ margin:0 0 12px 0; font-size:20px; }
+    p.subtitle{ margin:0 0 20px 0; color:#555; }
+
+    form table{
+      width:100%;
+      border-collapse:collapse;
+      table-layout:fixed;
+    }
+
+    tbody tr{
+      background:#fafafa;
+    }
+
+    tbody tr:nth-child(even){
+      background:#f8f9fa;
+    }
+
+    thead th{
+      border:2px solid var(--border);
+      text-align:center;
+      padding:8px;
+      background:#f1f1f1;
+      font-weight:600;
+      vertical-align:middle;
+    }
+
+    thead th:first-child{
+      text-align:left;
+      padding-left:12px;
+    }
+
+    tbody td{
+      border-left:2px solid var(--border);
+      border-right:2px solid var(--border);
+      border-bottom:2px solid var(--border);
+      padding:12px;
+      vertical-align:middle;
+    }
+
+    tbody tr:first-child td{ border-top:2px solid var(--border); }
+
+    /* first column (question text) */
+    .qcol{
+      width:55%;
+      padding:20px 18px;
+      text-align:left;
+      font-size:18px;
+      line-height:1.6;
+      font-weight:600;
+    }
+
+    /* radio cell */
+    .radio-cell{
+      width:9%;
+      text-align:center;
+      padding:0;
+    }
+
+    .scale-box{
+      display:inline-block;
+      width:var(--cell-size);
+      height:var(--cell-size);
+      margin:10px auto;
+      border:2px solid var(--border);
+      box-sizing:border-box;
+      border-radius:4px;
+      position:relative;
+      vertical-align:middle;
+    }
+
+    /* visually hide the radio but keep it accessible */
+    input[type="radio"]{
+      position:absolute;
+      left:0;
+      top:0;
+      width:100%;
+      height:100%;
+      opacity:0;
+      margin:0;
+      cursor:pointer;
+    }
+
+    /* show a check emoji when selected */
+    .scale-box .check{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform:translate(-50%,-50%) scale(0.001);
+      font-size:18px;
+      transition:transform 0.12s ease;
+    }
+
+    input[type="radio"]:checked + .check{
+      transform:translate(-50%,-50%) scale(1);
+    }
+
+    /* small labels above columns for mobile */
+    @media (max-width:720px){
+      .qcol{ 
+        width:100%; 
+        display:block; 
+        font-size:17px;
+        padding:18px 14px;
+        line-height:1.5;
+      }
+      .radio-cell{ width:20%; display:inline-block; }
+      thead{ display:none; }
+      tbody td{ display:block; }
+      tbody tr{ margin-bottom:12px; display:block; border:1px solid #eee; }
+      .scale-box{ margin:6px; }
+      .row-number{ font-size:17px; }
+    }
+
+    .row-number{
+      display:inline-block;
+      min-width:40px;
+      font-weight:700;
+      color:#1b5cff;
+      margin-right:15px;
+      font-size:18px;
+    }
+
+    .meta{
+      display:flex;
+      gap:12px;
+      margin-bottom:14px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    .meta label{ font-weight:600; color:#333; }
+    .meta input[type="text"]{
+      height:36px;
+      padding:6px 10px;
+      border:1px solid #bbb;
+      border-radius:6px;
+      font-size:15px;
+    }
+
+    .actions{
+      margin-top:16px;
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+
+    button{
+      padding:10px 14px;
+      font-size:15px;
+      cursor:pointer;
+      border-radius:8px;
+      border:1px solid #1b5cff;
+      background:#1b5cff;
+      color:white;
+    }
+
+    button[type="reset"]{
+      background:transparent;
+      color:#444;
+      border-color:#ccc;
+    }
+
+    .required-note{
+      color:#666;
+      font-size:13px;
+      margin-left:6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Social Media Use Questionnaire</h1>
+    <p class="subtitle">Please fill in student info and select the option that best applies. (1 = Very Rarely, 5 = Very Often)</p>
+
+    <form id="questionnaire" onsubmit="handleSubmit(event)">
+      <div class="meta">
+        <label>
+          Student Name:
+          <input name="student_name" type="text" required placeholder="Enter name">
+        </label>
+
+        <label>
+          Class:
+          <input name="class_name" type="text" required placeholder="e.g., I, II, LKG">
+        </label>
+
+        <div style="margin-left:auto; font-size:13px; color:#555;">
+          <strong>Scale:</strong>
+          <span class="required-note">1 Very Rarely — 2 Rarely — 3 Sometimes — 4 Often — 5 Very Often</span>
+        </div>
+      </div>
+
+      <table aria-describedby="instructions">
+        <thead>
+          <tr>
+            <th>Question</th>
+            <th>Very Rarely<br/>(1)</th>
+            <th>Rarely<br/>(2)</th>
+            <th>Sometimes<br/>(3)</th>
+            <th>Often<br/>(4)</th>
+            <th>Very Often<br/>(5)</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <!-- row 1 -->
+          <tr>
+            <td class="qcol">
+              <span class="row-number">Q1</span>
+              You spend a lot of time thinking about social media or planning how to use it.
+            </td>
+            <td class="radio-cell">
+              <label class="scale-box" title="Very Rarely">
+                <input type="radio" name="q1" value="1" required>
+                <span class="check" aria-hidden="true">✓</span>
+              </label>
+            </td>
+            <td class="radio-cell">
+              <label class="scale-box" title="Rarely">
+                <input type="radio" name="q1" value="2">
+                <span class="check" aria-hidden="true">✓</span>
+              </label>
+            </td>
+            <td class="radio-cell">
+              <label class="scale-box" title="Sometimes">
+                <input type="radio" name="q1" value="3">
+                <span class="check" aria-hidden="true">✓</span>
+              </label>
+            </td>
+            <td class="radio-cell">
+              <label class="scale-box" title="Often">
+                <input type="radio" name="q1" value="4">
+                <span class="check" aria-hidden="true">✓</span>
+              </label>
+            </td>
+            <td class="radio-cell">
+              <label class="scale-box" title="Very Often">
+                <input type="radio" name="q1" value="5">
+                <span class="check" aria-hidden="true">✓</span>
+              </label>
+            </td>
+          </tr>
+
+          <!-- row 2 -->
+          <tr>
+            <td class="qcol">
+              <span class="row-number">Q2</span>
+              You feel the urge to use social media more and more.
+            </td>
+            <td class="radio-cell"><label class="scale-box"><input type="radio" name="q2" value="1" required><span class="check">✓</span></label></td>
+            <td class="radio-cell"><label class="scale-box"><input type="radio" name="q2" value="2"><span class="check">✓</span></label></td>
+            <td class="radio-cell"><label class="scale-box"><input type="radio" name="q2" value="3"><span class="check">✓</span></label></td>
+            <td class="radio-cell"><label class="scale-box"><input type="radio" name="q2" value="4"><span class="check">✓</span></label></td>
+            <td class="radio-cell"><label class="scale-box"><input type="radio" name="q2" value="5"><span class="check">✓</span></label></td>
+          </tr>
+
+          <!-- row 3 -->
+          <tr>
+            <td class="qcol">
+              <span class="row-number">Q3</span>
+              You use social media in order to forget about personal problems.
+            </td>
+            <td class="radio-cell"><label class="scale-box"><input type="radio" name="q3" value="1" required><span class="check">✓</span></label></td>
+            <td class="radio-cell"><label class="scale-box"><input type="radio" name="q3" value="2"><span class="check">✓</span></label></td>
+            <td class="radio-cell"><label class="scale-box"><input type="radio" name="q3" value="3"><span class="check">✓</span></label></td>
+            <td class="radio-cell"><label class="scale-box"><input type="radio" name="q3" value="4"><span class="check">✓</span></label></td>
+            <td class="radio-cell"><label class="scale-box"><input type="radio" name="q3" value="5"><span class="check">✓</span></label></td>
+          </tr>
+
+          <!-- row 4 -->
+          <tr>
+            <td class="qcol">
+              <span class="row-number">Q4</span>
+              You have tried to cut down on the use of social media without success.
+            </td>
+            <td class="radio-cell"><label class="scale-box"><input type="radio" name="q4" value="1" required><span class="check">✓</span></label></td>
+            <td class="radio-cell"><label class="scale-box"><input type="radio" name="q4" value="2"><span class="check">✓</span></label></td>
+            <td class="radio-cell"><label class="scale-box"><input type="radio" name="q4" value="3"><span class="check">✓</span></label></td>
+            <td class="radio-cell"><label class="scale-box"><input type="radio" name="q4" value="4"><span class="check">✓</span></label></td>
+            <td class="radio-cell"><label class="scale-box"><input type="radio" name="q4" value="5"><span class="check">✓</span></label></td>
+          </tr>
+
+          <!-- row 5 -->
+          <tr>
+            <td class="qcol">
+              <span class="row-number">Q5</span>
+              You become restless or troubled if you are prohibited from social media.
+            </td>
+            <td class="radio-cell"><label class="scale-box"><input type="radio" name="q5" value="1" required><span class="check">✓</span></label></td>
+            <td class="radio-cell"><label class="scale-box"><input type="radio" name="q5" value="2"><span class="check">✓</span></label></td>
+            <td class="radio-cell"><label class="scale-box"><input type="radio" name="q5" value="3"><span class="check">✓</span></label></td>
+            <td class="radio-cell"><label class="scale-box"><input type="radio" name="q5" value="4"><span class="check">✓</span></label></td>
+            <td class="radio-cell"><label class="scale-box"><input type="radio" name="q5" value="5"><span class="check">✓</span></label></td>
+          </tr>
+
+          <!-- row 6 -->
+          <tr>
+            <td class="qcol">
+              <span class="row-number">Q6</span>
+              You use social media so much that it has had a negative impact on your job/studies.
+            </td>
+            <td class="radio-cell"><label class="scale-box"><input type="radio" name="q6" value="1" required><span class="check">✓</span></label></td>
+            <td class="radio-cell"><label class="scale-box"><input type="radio" name="q6" value="2"><span class="check">✓</span></label></td>
+            <td class="radio-cell"><label class="scale-box"><input type="radio" name="q6" value="3"><span class="check">✓</span></label></td>
+            <td class="radio-cell"><label class="scale-box"><input type="radio" name="q6" value="4"><span class="check">✓</span></label></td>
+            <td class="radio-cell"><label class="scale-box"><input type="radio" name="q6" value="5"><span class="check">✓</span></label></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="actions">
+        <button type="submit">Submit</button>
+        <button type="reset">Reset</button>
+        <div style="margin-left:auto; color:#666; font-size:13px;">All questions required.</div>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    function handleSubmit(e){
+      e.preventDefault();
+      const f = e.target;
+      const data = new FormData(f);
+      const out = {};
+      for (const [k,v] of data.entries()){
+        out[k] = v;
+      }
+      // Example: convert to JSON and show in a dialog — replace this with an actual submission
+      alert("Form values (JSON):\\n" + JSON.stringify(out, null, 2));
+      // If you want to send to a server, use fetch() here.
+    }
+  </script>
+</body>
+</html>

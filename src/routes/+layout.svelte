@@ -52,6 +52,12 @@
 				>
 					Find Admission Number
 				</a>
+				<a 
+					href="/attendance" 
+					class="px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 {$page.url.pathname === '/attendance' ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white border-2 border-green-500 shadow-sm' : 'text-gray-700 hover:text-green-600 hover:bg-green-50 border-2 border-transparent hover:border-green-200'}"
+				>
+					Attendance Sheets
+				</a>
 			</div>
 
 			<!-- Mobile menu button -->
@@ -87,6 +93,13 @@
 						class="block px-4 py-3 rounded-lg text-base font-semibold transition-all duration-200 {$page.url.pathname === '/lookup' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white border-2 border-purple-500 shadow-sm' : 'text-gray-700 hover:text-purple-600 hover:bg-purple-100 border-2 border-transparent hover:border-purple-200'}"
 					>
 						Find Admission Number
+					</a>
+					<a 
+						href="/attendance" 
+						onclick={closeMobileMenu}
+						class="block px-4 py-3 rounded-lg text-base font-semibold transition-all duration-200 {$page.url.pathname === '/attendance' ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white border-2 border-green-500 shadow-sm' : 'text-gray-700 hover:text-green-600 hover:bg-green-100 border-2 border-transparent hover:border-green-200'}"
+					>
+						Attendance Sheets
 					</a>
 				</div>
 			</div>
